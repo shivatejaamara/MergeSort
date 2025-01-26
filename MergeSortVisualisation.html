@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merge Sort Visualization</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f06, #ffcc33); /* Gradient background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .page {
+            display: none;
+            text-align: center;
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            background-color: rgba(0, 0, 0, 0.4); /* Transparent overlay */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+            animation: fadeIn 2s ease-in-out; /* Fade-in animation */
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+        }
+
+        /* Common Styles for all pages */
+        h1 {
+            font-size: 3rem;
+            font-weight: bold;
+            letter-spacing: 4px;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 span {
+            color: #ffcc33;
+            animation: glow 2s infinite alternate;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            background: linear-gradient(45deg, #ffcc33, #ff6699);
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-top: 20px; /* Add margin above the button */
+        }
+
+        button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+        }
+
+        button:focus {
+            outline: none;
+        }
+
+        .input-container {
+            margin: 30px auto;
+            display: flex;
+            justify-content: center;
+        }
+
+        input[type="text"] {
+            padding: 10px;
+            font-size: 18px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            width: 70%;
+            margin-right: 10px;
+        }
+
+        /* Step-by-step array visualization */
+        .array-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            margin-top: 20px;
+            max-height: 300px; /* Set max height */
+            overflow-y: auto; /* Enable vertical scrolling */
+        }
+
+        .array {
+            display: flex;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .array div {
+            width: 40px;
+            height: 40px;
+            background-color: #87ceeb;
+            margin: 5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            font-size: 20px;
+            border-radius: 4px;
+            border: 2px solid #333;
+            transition: background-color 0.3s ease;
+        }
+
+        /* Thank You Page */
+        .thank-you-container {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Fade-in animation */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Glowing effect */
+        @keyframes glow {
+            from { text-shadow: 0 0 20px #ffcc33, 0 0 30px #ff6699, 0 0 40px #ff6699; }
+            to { text-shadow: 0 0 40px #ffcc33, 0 0 60px #ff6699, 0 0 80px #ff6699; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Welcome Page -->
+    <div class="page" id="welcomePage">
+        <h1>Welcome to <span>Merge Sort</span> Visualization</h1>
+        <button onclick="navigateToInputPage()">Start Sorting</button>
+    </div>
+
+    <!-- Input Array Page -->
+    <div class="page" id="inputPage">
+        <h1>Enter Array for Sorting</h1>
+        <div class="input-container">
+            <input type="text" id="userInput" placeholder="e.g., 38,27,43,3,9,82,10">
+            <button onclick="navigateToSortPage()">Next</button>
+        </div>
+    </div>
+
+    <!-- Sorting Visualization Page -->
+    <div class="page" id="sortPage">
+        <h1>Step-by-Step Merge Sort Visualization</h1>
+        <div class="array-container" id="arrayContainer"></div>
+        <button id="stepButton" onclick="nextStep()">Next Step</button>
+    </div>
+
+    <!-- Thank You Page -->
+    <div class="page thank-you-container" id="thankYouPage">
+        <h1>Thank You!</h1>
+        <h2>Your sorted array is:</h2>
+        <div id="sortedArrayDisplay" class="array-container"></div>
+        <button onclick="navigateToInputPage()">Sort Again</button>
+    </div>
+
+    <script>
+        let array = [];
+        let steps = [];
+        let stepIndex = 0;
+
+        // Initially display welcome page
+        document.getElementById('welcomePage').style.display = 'block';
+
+        // Function to navigate from the Welcome Page to the Input Array Page
+        function navigateToInputPage() {
+            document.getElementById('welcomePage').style.display = 'none';
+            document.getElementById('inputPage').style.display = 'block';
+        }
+
+        // Function to navigate from Input Page to Sorting Visualization Page
+        function navigateToSortPage() {
+            const userInput = document.getElementById('userInput').value;
+            array = userInput.split(',').map(Number);
+
+            if (array.some(isNaN)) {
+                alert('Please enter a valid array of numbers.');
+                return;
+            }
+
+            // Hide Input Page, show Sort Page
+            document.getElementById('inputPage').style.display = 'none';
+            document.getElementById('sortPage').style.display = 'block';
+
+            // Reset steps and step index
+            steps = [];
+            stepIndex = 0;
+            document.getElementById('arrayContainer').innerHTML = ''; // Clear previous visualizations
+
+            // Generate steps for merge sort
+            generateMergeSortSteps([...array]); // Clone the array
+
+            // Display the initial unsorted array
+            appendStepDisplay(array, "Initial Array");
+        }
+
+        // Function to append each array state as a new step in the container
+        function appendStepDisplay(arr, label) {
+            const arrayContainer = document.getElementById('arrayContainer');
+            const stepWrapper = document.createElement('div');
+
+            const title = document.createElement('h3');
+            title.innerText = label;
+            arrayContainer.appendChild(title);
+
+            const arrayDiv = document.createElement('div');
+            arrayDiv.className = 'array';
+
+            arr.forEach(item => {
+                const element = document.createElement('div');
+                element.innerText = item;
+                arrayDiv.appendChild(element);
+            });
+
+            arrayContainer.appendChild(arrayDiv);
+        }
+
+        // Function to generate the steps of merge sort
+        function generateMergeSortSteps(arr) {
+            if (arr.length < 2) {
+                return arr;
+            }
+
+            const middle = Math.floor(arr.length / 2);
+            const left = arr.slice(0, middle);
+            const right = arr.slice(middle);
+
+            const sortedLeft = generateMergeSortSteps(left);
+            const sortedRight = generateMergeSortSteps(right);
+
+            return mergeAndRecordSteps(sortedLeft, sortedRight);
+        }
+
+        // Function to merge two arrays and record steps
+        function mergeAndRecordSteps(left, right) {
+            let resultArray = [];
+            let leftIndex = 0;
+            let rightIndex = 0;
+
+            while (leftIndex < left.length && rightIndex < right.length) {
+                if (left[leftIndex] < right[rightIndex]) {
+                    resultArray.push(left[leftIndex]);
+                    leftIndex++;
+                } else {
+                    resultArray.push(right[rightIndex]);
+                    rightIndex++;
+                }
+            }
+
+            resultArray = resultArray.concat(left.slice(leftIndex)).concat(right.slice(rightIndex));
+            steps.push([...resultArray]); // Record each step
+
+            return resultArray;
+        }
+
+        // Function to visualize the next step
+        function nextStep() {
+            if (stepIndex < steps.length) {
+                appendStepDisplay(steps[stepIndex], `Step ${stepIndex + 1}`);
+                stepIndex++;
+            } else {
+                // Show Thank You Page after sorting is complete
+                document.getElementById('sortPage').style.display = 'none';
+                document.getElementById('thankYouPage').style.display = 'flex';
+
+                // Display sorted array
+                document.getElementById('sortedArrayDisplay').innerText = steps[steps.length - 1].join(', ');
+            }
+        }
+    </script>
+</body>
+</html>
